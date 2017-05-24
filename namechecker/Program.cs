@@ -24,6 +24,8 @@ namespace namechecker
             Console.WriteLine(names.Count);
             */
             Console.WriteLine(p);
+
+
             return p == null ? 500 : 200;
         }
 
@@ -76,7 +78,7 @@ namespace namechecker
                         result = sr.ReadToEnd();
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return ex.Message; }
             return result;
         }
     }
