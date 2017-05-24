@@ -68,6 +68,7 @@ namespace namechecker
             string result = null;
             try
             {
+                ServicePointManager.Expect100Continue = false;
                 using (var client = new TcpClient(internic, 43))
                 using (var stream = client.GetStream())
                 {
