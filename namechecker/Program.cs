@@ -11,7 +11,7 @@ namespace namechecker
 {
     class Program
     {
-        static string Main(string[] args)
+        static int Main(string[] args)
         {
             string p = RequestWhois("hned.org");
             Console.WriteLine(p);
@@ -23,8 +23,8 @@ namespace namechecker
 
             Console.WriteLine(names.Count);
             */
-            Console.WriteLine("200");
-            return p;
+            Console.WriteLine(p);
+            return p == null ? 500 : 200;
         }
 
         private static List<string> GenerateQueueFor5() {
