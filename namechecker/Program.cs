@@ -11,22 +11,47 @@ namespace namechecker
 {
     class Program
     {
-        static int Main(string[] args)
+        static void Main(string[] args)
         {
-            string p = RequestWhois("hned.org");
-            Console.WriteLine(p);
-
-            /*
-            var names = GenerateQueueFor5().Where(x => !x.StartsWith("y")).ToList();
-            foreach (var domain in names)
-                Console.WriteLine(domain);
-
+            var names = GenerateQueueFor5().ToList();
             Console.WriteLine(names.Count);
-            */
-            Console.WriteLine(p);
+            var text = new StringBuilder();
+            foreach (var name in names){
+                var domainName = name + ".com";
+                var res = RequestWhois(domainName);
+				if (res.Contains("No match for"))
+				{
+                    Console.WriteLine($"{domainName} is FREE");
+                    text.AppendLine(domainName);
+					continue;
+				}
+			}
+            File.WriteAllText("domains.txt",text.ToString());
+			Console.WriteLine("Finish");
+        }
 
+        private static void REPL()
+        {
+            while (true)
+            {
+                string domainName = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(domainName))
+                {
+                    Console.WriteLine("Provide a domain name");
+                    continue;
+                }
+                var res = RequestWhois(domainName);
+                if (res.Contains("No match for"))
+                {
+                    Console.WriteLine("FREE");
+                    continue;
+                }
 
-            return p == null ? 500 : 200;
+                var pattern = @"Expiry\sDate:\s*(?<date>\d{4}-\d{2}-\d{2})";
+                var date = System.Text.RegularExpressions.Regex.Match(res, pattern).Groups["date"].Value;
+
+                Console.WriteLine($"TAKEN until {date}");
+            }
         }
 
         private static List<string> GenerateQueueFor5() {
@@ -69,15 +94,20 @@ namespace namechecker
             try
             {
                 ServicePointManager.Expect100Continue = false;
-                using (var client = new TcpClient(internic, 43))
-                using (var stream = client.GetStream())
-                {
-                    var bytes = ASCIIEncoding.ASCII.GetBytes(domainName);
-                    stream.Write(bytes, 0, bytes.Length);
-                    stream.Flush();
-                    using (var sr = new StreamReader(stream))
-                        result = sr.ReadToEnd();
-                }
+                var client = new TcpClient(internic, 43);
+
+                var sreader = client.GetStream();
+                var swriter = client.GetStream();
+
+
+                var streamwriter = new StreamWriter(swriter);
+                streamwriter.WriteLine(domainName);
+                streamwriter.Flush();
+                var streamreader = new StreamReader(sreader);
+                result = streamreader.ReadToEnd();
+
+                streamwriter.Close();
+                streamreader.Close();
             }
             catch (Exception ex) { return ex.Message; }
             return result;
